@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly WD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+main() {
+  [[ -n "${DEBUG:-}" ]] && set -x;
+
+  local -r tmux_version="${1:-}"
+  local -r version="$(git -C "${WD}" describe --tags --abbrev=0 | sed 's/^v//')"
+  echo -n "tmux-${tmux_version}:${version}"
+}
+
+main "$@"
