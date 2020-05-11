@@ -71,14 +71,17 @@ build_tmux() {
     DEBIAN_FRONTEND=noninteractive apt-get -qq install -y --no-install-recommends \
       bison \
       build-essential \
-      git \
+      ca-certificates \
       libevent-dev \
       ncurses-dev \
       pkg-config \
+      wget
 
     cd /tmp
-    git clone https://github.com/tmux/tmux.git -b ${tmux_version}
-    cd tmux
+    tmux_version='3.1b'
+    wget -O tmux-${tmux_version}.tar.gz https://github.com/tmux/tmux/releases/download/${tmux_version}/tmux-${tmux_version}.tar.gz
+    tar -xzf tmux-${tmux_version}.tar.gz
+    cd tmux-${tmux_version}
     ./configure --enable-static
     make
     make install
