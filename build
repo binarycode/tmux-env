@@ -78,7 +78,6 @@ build_tmux() {
       wget
 
     cd /tmp
-    tmux_version='3.1b'
     wget -O tmux-${tmux_version}.tar.gz https://github.com/tmux/tmux/releases/download/${tmux_version}/tmux-${tmux_version}.tar.gz
     tar -xzf tmux-${tmux_version}.tar.gz
     cd tmux-${tmux_version}
