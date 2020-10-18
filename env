@@ -17,6 +17,7 @@
 ### Environment variables:
 ###
 ###   DEBUG - enable debug mode (disabled by default)
+###   OPT - application path mounted to /opt (empty by default)
 ###   TMUX_VERSION - 3.1b by default
 
 set -Eeuo pipefail
@@ -104,8 +105,8 @@ main() {
       _stop_pod "${POD}" || true
       _remove_pod "${POD}" || true
       _image_exists "${IMAGE}" || build_image
-      _create_pod "${POD}"
-      _start_container "${POD}" "${IMAGE}" ""
+      _start_pod "${POD}"
+      _start_container "${POD}" "${IMAGE}" "${OPT:-}"
       ;;
     build)
       _image_exists "${IMAGE}" || build_image
@@ -197,19 +198,20 @@ _start_container() {
   shift 3
 
   # enable copy-paste between host and container
-  if [[ -n "${DISPLAY}" ]]; then
-    options+=("--env DISPLAY=${DISPLAY}")
-    options+=("--volume /tmp/.X11-unix:/tmp/.X11-unix")
+  if [[ -n "${DISPLAY:-}" ]]; then
+    options+=(--env "DISPLAY=${DISPLAY}")
+    options+=(--volume "/tmp/.X11-unix:/tmp/.X11-unix")
   fi
 
   # passthrough SSH_AUTH_SOCK to container
-  if [[ -n "${SSH_AUTH_SOCK}" ]]; then
-    options+=("--env SSH_AUTH_SOCK=/tmp/ssh-agent")
-    options+=("--volume ${SSH_AUTH_SOCK}:/tmp/ssh-agent")
+  if [[ -n "${SSH_AUTH_SOCK:-}" ]] && [[ -e "${SSH_AUTH_SOCK}" ]]; then
+    options+=(--env "SSH_AUTH_SOCK=/tmp/ssh-agent")
+    options+=(--volume "${SSH_AUTH_SOCK}:/tmp/ssh-agent")
   fi
 
-  if [[ -n "${opt}" ]]; then
-    options+=("--volume ${opt}:/opt")
+  if [[ -n "${opt:-}" ]]; then
+    options+=(--volume "${opt}:/opt")
+    options+=(--workdir /opt)
   fi
 
   podman run \
