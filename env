@@ -140,6 +140,12 @@ _create_container() {
   container=$(buildah from "${image}")
 }
 
+_create_volume() {
+  local -r volume="$1"
+  [[ $(podman volume ls --format='{{.Name}}' | grep -c "^${volume}$") -ne 0 ]] && return
+  podman volume create "${volume}"
+}
+
 _display_help_and_exit() {
   awk -F'### ' '/^###/ { print $2 }' "$0"
   exit 0
@@ -153,6 +159,14 @@ _error() {
 _image_exists() {
   local -r image="$1"
   [[ $(buildah images --format='{{.Name}}:{{.Tag}}' | grep -c "^localhost/${image}$") -ne 0 ]]
+}
+
+_is_root() {
+  if [[ $EUID -eq 0 ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 _pod_exists() {
@@ -186,7 +200,11 @@ _run_in_container() {
 
 _run_in_unshare() {
   local -r commands="$1"
-  buildah unshare bash -c "${commands}"
+  if _is_root; then
+    bash -c "${commands}"
+  else
+    buildah unshare bash -c "${commands}"
+  fi
 }
 
 _start_container() {
